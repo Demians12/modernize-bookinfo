@@ -1,6 +1,18 @@
-# Cluster Basics - Create the cluster and verify
+# Lab 1: Amazon EKS Cluster Setup with Istio's Bookinfo Application: <br>
+In this lab, we will set up an Amazon EKS cluster using eksctl, install kustomize, and deploy the bookinfo application from Istio. The lab focuses on the basic setup and will be the foundation for future labs, where we will explore more advanced topics like monitoring, cluster management, and scaling.
 
-## Create cluster
+## Prerequisites
+Ensure that you have the following tools installed on your system:
+
+- AWS CLI
+- eksctl
+- kubectl
+- kustomize
+
+## Steps
+## 1. Cluster Setup
+First, we will create an EKS cluster in the AWS us-east-1 region. You can use the following command to create the cluster:
+
 ```bash
 eksctl create cluster --name=lab1-eks \
                       --region=us-east-1 \
@@ -8,17 +20,18 @@ eksctl create cluster --name=lab1-eks \
                       --version="1.25" \
                       --without-nodegroup
 ```
-## Get list of clusters
+## Check the created cluster with:
 ```bash 
 eksctl get cluster
 ```
 
-## Create key pair
+## 2. Key Pair Creation
 ```bash 
 aws ec2 create-key-pair --key-name lab1-key >> ~/.ssh/lab1.pem
 ```
+## 3. Setup OIDC Provider
+**In order to enable IAM Roles for ServiceAccounts, we need to associate an IAM OpenID Connect (OIDC) provider with our cluster:** <br>
 
-## oidc provider 
 ```bash 
 eksctl utils associate-iam-oidc-provider \
     --region us-east-1 \
@@ -26,7 +39,8 @@ eksctl utils associate-iam-oidc-provider \
     --approve
 ```
 
-## Create EKS nodegroup in private subnet
+## 4. Nodegroup Creation
+**We will create a nodegroup with t3.medium nodes in the private subnet:**
 ```bash
 eksctl create nodegroup --cluster=lab1-eks \
                         --region=us-east-1 \
@@ -46,12 +60,14 @@ eksctl create nodegroup --cluster=lab1-eks \
                         --node-private-networking
 ```
 
-## Configure kubeconfig for kubectl
+## 5. Configure kubectl:
+Configure kubectl to interact with your new cluster:
+
 ```bash
 aws eks --region us-east-1 update-kubeconfig --name lab1-eks
 ```
 
-## Verify cluster: <br>
+## 6. Cluster Verification: <br>
 - List cluster: <br>
 `eksctl get cluster`
 
@@ -64,7 +80,9 @@ aws eks --region us-east-1 update-kubeconfig --name lab1-eks
 - kubectl context changed to new cluster: <br>
 `kubectl config view --minify`
 
-## Verify the roles: <br>
+##  7. Verification of Roles, Security Groups and CloudFormation Stacks: <br>
+Here are commands to help verify the roles, security groups, and CloudFormation stacks:
+
 - Describe the instances to obtain the role name: <br>
 `aws ec2 describe-instances --region us-east-1`
 
@@ -75,45 +93,22 @@ This command will return a list of policy names attached to the role
 - Get policy details: <br>
 `aws iam get-role-policy --role-name <role-name> --policy-name <policy-name>`
 
-## Verify Security Group Associated to Worker Nodes: <br>
 - Describe the instances to obtain the role name: <br>
 `aws ec2 describe-instances --region us-east-1`
 
 - Get security group details: <br>
 `aws ec2 describe-security-groups --group-ids <security-group-id> --region <region-name>`
 
-## Verify CloudFormation Stacks: <br>
-- List Cloudformation stacks. This command will return a JSON response with all the CloudFormation stacks in the specified region. <br>
+- List Cloudformation stacks: <br>
 `aws cloudformation describe-stacks --region <region-name>`
 
-- Get details for the specific stack. This will provide information about the selected stack, including its status, parameters, outputs, and more. <br>
+- Get details for the specific stack: <br>
 `aws cloudformation describe-stacks --stack-name <stack-name> --region <region-name>`
 
-- Get stack events to retrieve the events for the specified stack: <br>
+- Get stack events: <br>
 `aws cloudformation describe-stack-events --stack-name <stack-name> --region <region-name>`
 
 ## Login to Worker Node using Keypair: <br> 
 - For Mac, Linux or Windows 10: <br>
 `ssh -i lab-key.pem ec2-user@<Public-IP-of-Worker-Node>`
 
-# ======================================================================================= #
-# ======================================================================================= #
-
-- Create IAM Policy for the cluster.
-```bash
-aws iam create-policy --policy-name cluster-admin-policy --policy-document file://cluster-admin-policy.json
-```
-- Attach policy to a role
-```bash
-aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/cluster-admin-policy --role-name cluster-admin
-```
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: bookinfo
-  namespace: bookinfo
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::698340235880:role/cluster-admin
-```
-***Make a note of Policy ARN as we are going to use that in next step when creating IAM Role***
