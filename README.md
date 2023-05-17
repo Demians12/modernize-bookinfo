@@ -1,4 +1,6 @@
 # BookInfo Modernization Project
+
+## Description
 This project is dedicated to modernizing Istio's example application by implementing resources that enhance the quality and efficiency of the infrastructure. The project is structured into various labs, with each lab designed to implement one or more specific resources to the cluster.
 
 ## Lab 1 - Cluster Creation and Configuration
@@ -11,3 +13,4 @@ Building upon the foundations set in Lab 1, this lab will enhance our cluster wi
 ... Continue
 
 Each lab is designed to build upon the concepts and configurations implemented in the previous one. Therefore, it's recommended to complete them in sequence. If you encounter any issues or have any suggestions, please don't hesitate to raise an issue in this repository.
+
