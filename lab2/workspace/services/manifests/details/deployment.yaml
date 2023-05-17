@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: details-v1
+  labels:
+    app: details
+    version: v1
+    app.kubernetes.io/created-by: avivacode-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: details
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: details
+        version: v1
+    spec:
+      serviceAccountName: bookinfo-service-account
+      containers:
+      - name: details
+        image: docker.io/istio/examples-bookinfo-details-v1:1.17.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9080
+        livenessProbe:
+            httpGet:
+              path: /health
+              port: 9080
+            initialDelaySeconds: 30
+            periodSeconds: 3
+        resources:
+            limits:
+              cpu: 250m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+      securityContext:
+          runAsUser: 1000
